@@ -1,0 +1,55 @@
+<main class="favorites-page">
+  <section class="favorites-shell">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Find-It</p>
+        <h1>Favoritos</h1>
+      </div>
+      <a class="secondary-link" routerLink="/search">Buscar productos</a>
+    </header>
+
+    @if (errorMessage) {
+      <p class="form-error" role="alert">{{ errorMessage }}</p>
+    }
+
+    @if (isLoading) {
+      <section class="state-card">
+        <span class="spinner" aria-hidden="true"></span>
+        Cargando favoritos
+      </section>
+    } @else if (favorites.length) {
+      <section class="favorites-grid">
+        @for (favorite of favorites; track trackFavorite($index, favorite)) {
+          <article class="favorite-card">
+            <div class="product-media">
+              @if (favorite.product?.image) {
+                <img [src]="favorite.product!.image" [alt]="productName(favorite)" />
+              } @else {
+                <span aria-hidden="true">FI</span>
+              }
+            </div>
+            <div class="card-body">
+              <p class="eyebrow">{{ productCategory(favorite) }}</p>
+              <h2>{{ productName(favorite) }}</h2>
+              <p>{{ productBrand(favorite) }}</p>
+              <button
+                class="danger-button"
+                type="button"
+                [disabled]="deletingId === favorite.id"
+                (click)="removeFavorite(favorite)"
+              >
+                Eliminar de favoritos
+              </button>
+            </div>
+          </article>
+        }
+      </section>
+    } @else {
+      <section class="empty-state">
+        <h2>No tienes favoritos guardados</h2>
+        <p>Marca productos con el corazon para encontrarlos rapido despues.</p>
+        <a class="primary-button" routerLink="/search">Buscar productos</a>
+      </section>
+    }
+  </section>
+</main>

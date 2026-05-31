@@ -1,0 +1,69 @@
+<main class="map-page">
+  <section class="map-shell" aria-label="Mapa de tiendas cercanas">
+    <div id="nearby-stores-map" class="map-canvas"></div>
+
+    <aside class="stores-panel" aria-label="Tiendas cercanas">
+      <header>
+        <div>
+          <p class="eyebrow">Find-It</p>
+          <h1>Tiendas cercanas</h1>
+        </div>
+        <a routerLink="/search">Buscar</a>
+      </header>
+
+      @if (locationStatus === 'loading') {
+        <div class="status-message">
+          <span class="spinner" aria-hidden="true"></span>
+          Obteniendo ubicacion
+        </div>
+      } @else if (errorMessage) {
+        <div class="status-message error" role="alert">
+          <p>{{ errorMessage }}</p>
+          <button type="button" (click)="retryLocation()">Intentar de nuevo</button>
+        </div>
+      } @else if (isLoadingStores) {
+        <div class="status-message">
+          <span class="spinner" aria-hidden="true"></span>
+          Cargando tiendas
+        </div>
+      } @else if (stores.length) {
+        <p class="result-count">{{ stores.length }} tiendas en un radio de 10 km</p>
+
+        <div class="store-list">
+          @for (store of stores; track trackStore($index, store)) {
+            <article
+              class="store-item"
+              [class.active]="selectedStore?.id === store.id"
+              tabindex="0"
+              role="button"
+              (click)="selectStore(store)"
+              (keydown.enter)="selectStore(store)"
+            >
+              <div>
+                <h2>{{ store.name }}</h2>
+                <p>{{ store.address }}</p>
+              </div>
+
+              <div class="item-meta">
+                <span>{{ distanceLabel(store) }}</span>
+                <div class="stars" [attr.aria-label]="'Rating ' + store.rating">
+                  @for (star of ratingStars(store.rating); track $index) {
+                    <span [class.filled]="star === 'filled'">&#9733;</span>
+                  }
+                </div>
+              </div>
+
+              <a class="detail-link" [routerLink]="['/stores', store.id]" (click)="$event.stopPropagation()">
+                Ver detalle
+              </a>
+            </article>
+          }
+        </div>
+      } @else {
+        <div class="status-message">
+          No encontramos tiendas cercanas en este momento.
+        </div>
+      }
+    </aside>
+  </section>
+</main>

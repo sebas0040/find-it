@@ -1,0 +1,310 @@
+<main class="inventory-page">
+  <section class="inventory-shell">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Find-It tienda</p>
+        <h1>Gestion de inventario</h1>
+      </div>
+      <div class="header-actions">
+        <a class="secondary-link" routerLink="/dashboard">Dashboard</a>
+        <button class="primary-button" type="button" (click)="openAddModal()">Agregar producto</button>
+      </div>
+    </header>
+
+    @if (errorMessage) {
+      <section class="alert" role="alert">{{ errorMessage }}</section>
+    }
+
+    <section class="toolbar" [formGroup]="searchForm">
+      <label class="field search-field">
+        <span>Buscar producto</span>
+        <input type="search" formControlName="search" placeholder="Nombre o marca" (input)="goToPage(1)" />
+      </label>
+
+      <label class="field">
+        <span>Disponibilidad</span>
+        <select formControlName="availability" (change)="goToPage(1)">
+          <option value="all">Todos</option>
+          <option value="available">Disponibles</option>
+          <option value="unavailable">No disponibles</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="inventory-panel">
+      <header class="panel-header">
+        <div>
+          <p class="eyebrow">Productos</p>
+          <h2>{{ filteredInventory.length }} items</h2>
+        </div>
+        @if (hasActiveFilters) {
+          <button class="text-button" type="button" (click)="clearFilters()">Limpiar filtros</button>
+        }
+      </header>
+
+      @if (isLoading) {
+        <div class="state-card">
+          <span class="spinner" aria-hidden="true"></span>
+          Cargando inventario
+        </div>
+      } @else if (!inventory.length) {
+        <div class="empty-state">
+          <h2>Todavia no tienes productos</h2>
+          <p>Agrega el primer producto de tu tienda para que aparezca en Find-It.</p>
+          <button class="primary-button" type="button" (click)="openAddModal()">Agregar primer producto</button>
+        </div>
+      } @else if (!filteredInventory.length) {
+        <div class="state-card">No hay productos que coincidan con los filtros.</div>
+      } @else {
+        <div class="inventory-table" role="table">
+          <div class="table-row table-head" role="row">
+            <span role="columnheader">Producto</span>
+            <span role="columnheader">Precio</span>
+            <span role="columnheader">Stock</span>
+            <span role="columnheader">Disponible</span>
+            <span role="columnheader">Acciones</span>
+          </div>
+
+          @for (item of pagedInventory; track trackInventory($index, item)) {
+            <article class="table-row" role="row">
+              <div class="product-cell" role="cell">
+                <strong>{{ item.product.name }}</strong>
+                <span>{{ item.product.brand || 'Marca no especificada' }}</span>
+              </div>
+              <div role="cell">{{ formatPrice(item.price) }}</div>
+              <div role="cell">{{ item.stock }}</div>
+              <div role="cell">
+                <label class="switch">
+                  <input
+                    type="checkbox"
+                    [checked]="item.available"
+                    (change)="toggleAvailability(item, $any($event.target).checked)"
+                  />
+                  <span aria-hidden="true"></span>
+                </label>
+              </div>
+              <div class="row-actions" role="cell">
+                <button class="secondary-button compact" type="button" (click)="openEditModal(item)">
+                  Editar precio/stock
+                </button>
+                <button
+                  class="danger-button compact"
+                  type="button"
+                  [disabled]="isDeletingId === item.id"
+                  (click)="deleteItem(item)"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+
+        <footer class="pagination">
+          <button class="secondary-button compact" type="button" [disabled]="page === 1" (click)="goToPage(page - 1)">
+            Anterior
+          </button>
+          <span>Pagina {{ page }} de {{ totalPages }}</span>
+          <button
+            class="secondary-button compact"
+            type="button"
+            [disabled]="page === totalPages"
+            (click)="goToPage(page + 1)"
+          >
+            Siguiente
+          </button>
+        </footer>
+      }
+    </section>
+  </section>
+</main>
+
+@if (modalMode === 'add') {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <section class="modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <div>
+          <p class="eyebrow">Agregar al inventario</p>
+          <h2>{{ addStep === 1 ? 'Buscar producto' : 'Configurar precio y stock' }}</h2>
+        </div>
+        <button class="icon-button" type="button" aria-label="Cerrar" (click)="closeModal()">x</button>
+      </header>
+
+      @if (modalError) {
+        <p class="form-error" role="alert">{{ modalError }}</p>
+      }
+
+      @if (addStep === 1) {
+        <div class="modal-body" [formGroup]="productSearchForm">
+          <label class="field">
+            <span>Producto existente</span>
+            <input type="search" formControlName="query" placeholder="Buscar por nombre" />
+          </label>
+
+          <div class="result-list">
+            @if (isSearchingProducts) {
+              <div class="inline-state">
+                <span class="spinner" aria-hidden="true"></span>
+                Buscando productos
+              </div>
+            } @else if (productResults.length) {
+              @for (product of productResults; track trackProduct($index, product)) {
+                <button class="product-result" type="button" (click)="selectProduct(product)">
+                  <strong>{{ product.name }}</strong>
+                  <span>{{ product.brand || 'Marca no especificada' }} · {{ categoryName(product) }}</span>
+                </button>
+              }
+            } @else {
+              <div class="inline-state">Busca un producto o crea uno nuevo.</div>
+            }
+          </div>
+
+          <button class="secondary-button" type="button" (click)="openCreateProduct()">Crear nuevo producto</button>
+        </div>
+      } @else {
+        <form class="modal-body" [formGroup]="inventoryForm" (ngSubmit)="createInventoryItem()">
+          @if (selectedProduct) {
+            <div class="selected-product">
+              <span>Producto seleccionado</span>
+              <strong>{{ selectedProduct.name }}</strong>
+              <small>{{ selectedProduct.brand || 'Marca no especificada' }}</small>
+            </div>
+          }
+
+          <div class="form-grid">
+            <label class="field">
+              <span>Precio</span>
+              <input type="number" formControlName="price" min="0" step="0.01" />
+            </label>
+            <label class="field">
+              <span>Stock</span>
+              <input type="number" formControlName="stock" min="0" step="1" />
+            </label>
+          </div>
+
+          <label class="check-field">
+            <input type="checkbox" formControlName="available" />
+            <span>Disponible</span>
+          </label>
+
+          <div class="button-row">
+            <button class="secondary-button" type="button" (click)="backToProductSearch()">Volver</button>
+            <button class="primary-button" type="submit" [disabled]="isSaving">
+              @if (isSaving) {
+                <span class="spinner light" aria-hidden="true"></span>
+              }
+              Confirmar
+            </button>
+          </div>
+        </form>
+      }
+    </section>
+  </div>
+}
+
+@if (modalMode === 'createProduct') {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <section class="modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <div>
+          <p class="eyebrow">Producto nuevo</p>
+          <h2>Crear producto</h2>
+        </div>
+        <button class="icon-button" type="button" aria-label="Cerrar" (click)="closeModal()">x</button>
+      </header>
+
+      <form class="modal-body" [formGroup]="productForm" (ngSubmit)="createProduct()">
+        @if (modalError) {
+          <p class="form-error" role="alert">{{ modalError }}</p>
+        }
+
+        <div class="form-grid">
+          <label class="field">
+            <span>Nombre</span>
+            <input type="text" formControlName="name" />
+          </label>
+          <label class="field">
+            <span>Marca</span>
+            <input type="text" formControlName="brand" />
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Categoria</span>
+          <select formControlName="category_id">
+            <option [ngValue]="null">Selecciona una categoria</option>
+            @for (category of categories; track trackCategory($index, category)) {
+              <option [ngValue]="category.id">{{ category.name }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Descripcion</span>
+          <textarea rows="3" formControlName="description"></textarea>
+        </label>
+
+        <label class="field">
+          <span>Image URL</span>
+          <input type="url" formControlName="image" />
+        </label>
+
+        <div class="button-row">
+          <button class="secondary-button" type="button" (click)="openAddModal()">Volver</button>
+          <button class="primary-button" type="submit" [disabled]="isSaving || isLoadingCategories">
+            @if (isSaving) {
+              <span class="spinner light" aria-hidden="true"></span>
+            }
+            Crear y continuar
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+}
+
+@if (modalMode === 'edit' && editingItem) {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <section class="modal compact-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <div>
+          <p class="eyebrow">Editar inventario</p>
+          <h2>{{ editingItem.product.name }}</h2>
+        </div>
+        <button class="icon-button" type="button" aria-label="Cerrar" (click)="closeModal()">x</button>
+      </header>
+
+      <form class="modal-body" [formGroup]="editForm" (ngSubmit)="saveEdit()">
+        @if (modalError) {
+          <p class="form-error" role="alert">{{ modalError }}</p>
+        }
+
+        <div class="form-grid">
+          <label class="field">
+            <span>Precio</span>
+            <input type="number" formControlName="price" min="0" step="0.01" />
+          </label>
+          <label class="field">
+            <span>Stock</span>
+            <input type="number" formControlName="stock" min="0" step="1" />
+          </label>
+        </div>
+
+        <label class="check-field">
+          <input type="checkbox" formControlName="available" />
+          <span>Disponible</span>
+        </label>
+
+        <div class="button-row">
+          <button class="secondary-button" type="button" (click)="closeModal()">Cancelar</button>
+          <button class="primary-button" type="submit" [disabled]="isSaving">
+            @if (isSaving) {
+              <span class="spinner light" aria-hidden="true"></span>
+            }
+            Guardar
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+}

@@ -1,0 +1,192 @@
+<main class="store-page">
+  <section class="store-shell">
+    <a class="back-link" routerLink="/map">Volver al mapa</a>
+
+    @if (isLoadingStore) {
+      <section class="state-card">
+        <span class="spinner" aria-hidden="true"></span>
+        Cargando tienda
+      </section>
+    } @else if (errorMessage) {
+      <section class="state-card error" role="alert">{{ errorMessage }}</section>
+    } @else if (store) {
+      <header class="store-header">
+        <div>
+          <p class="eyebrow">Tienda</p>
+          <h1>{{ store.name }}</h1>
+          <p>{{ store.description || 'Sin descripcion disponible.' }}</p>
+        </div>
+
+        <div class="rating-panel">
+          @if (store.verified) {
+            <span class="verified-badge">Verificada</span>
+          }
+          <div class="stars" [attr.aria-label]="'Rating ' + averageRating()">
+            @for (star of ratingStars(averageRating()); track $index) {
+              <span [class.filled]="star === 'filled'">&#9733;</span>
+            }
+          </div>
+          <strong>{{ averageRating() }}</strong>
+        </div>
+      </header>
+
+      <section class="info-band">
+        <div>
+          <span>Direccion</span>
+          <strong>{{ store.address }}</strong>
+        </div>
+      </section>
+
+      <section class="content-grid">
+        <article class="section-panel">
+          <header>
+            <h2>Productos disponibles</h2>
+            @if (inventory) {
+              <span>{{ inventory.count }} items</span>
+            }
+          </header>
+
+          @if (isLoadingInventory) {
+            <div class="inline-state">
+              <span class="spinner" aria-hidden="true"></span>
+              Cargando inventario
+            </div>
+          } @else if (inventory?.results?.length) {
+            <div class="inventory-list">
+              @for (item of inventory!.results; track trackInventory($index, item)) {
+                <article class="inventory-item">
+                  <div>
+                    <h3>{{ item.product.name }}</h3>
+                    <p>{{ item.product.brand || 'Marca no especificada' }}</p>
+                  </div>
+                  <div class="inventory-meta">
+                    <strong>{{ formatPrice(item.price) }}</strong>
+                    <span>{{ item.stock }} en stock</span>
+                    <span class="stock-badge" [class.out]="!item.available || item.stock <= 0">
+                      {{ item.available && item.stock > 0 ? 'Disponible' : 'Sin stock' }}
+                    </span>
+                  </div>
+                </article>
+              }
+            </div>
+
+            <nav class="pagination" aria-label="Paginacion de inventario">
+              <button
+                type="button"
+                [disabled]="!inventory?.previous || isLoadingInventory"
+                (click)="goToInventoryPage(inventory!.previous)"
+              >
+                Anterior
+              </button>
+              <button
+                type="button"
+                [disabled]="!inventory?.next || isLoadingInventory"
+                (click)="goToInventoryPage(inventory!.next)"
+              >
+                Siguiente
+              </button>
+            </nav>
+          } @else {
+            <div class="inline-state">No hay productos publicados.</div>
+          }
+        </article>
+
+        <article class="section-panel">
+          <header>
+            <h2>Reviews</h2>
+            @if (reviews) {
+              <span>{{ reviews.count }} comentarios</span>
+            }
+          </header>
+
+          @if (isLoadingReviews) {
+            <div class="inline-state">
+              <span class="spinner" aria-hidden="true"></span>
+              Cargando reviews
+            </div>
+          } @else {
+            @if (reviewError) {
+              <p class="form-error" role="alert">{{ reviewError }}</p>
+            }
+
+            @if (canCreateReview() || isEditingReview) {
+              <form class="review-form" [formGroup]="reviewForm" (ngSubmit)="submitReview()">
+                <div class="rating-input" aria-label="Calificacion">
+                  @for (rating of [1, 2, 3, 4, 5]; track rating) {
+                    <button
+                      type="button"
+                      [class.filled]="rating <= reviewForm.controls.rating.value"
+                      (click)="setReviewRating(rating)"
+                      [attr.aria-label]="'Dar ' + rating + ' estrellas'"
+                    >
+                      &#9733;
+                    </button>
+                  }
+                </div>
+
+                <label class="field">
+                  <span>Comentario</span>
+                  <textarea rows="4" formControlName="comment" placeholder="Cuenta como fue tu experiencia"></textarea>
+                </label>
+
+                <div class="review-actions">
+                  @if (isEditingReview) {
+                    <button class="secondary-button" type="button" (click)="cancelEditReview()">Cancelar</button>
+                  }
+                  <button class="primary-button" type="submit" [disabled]="isSavingReview">
+                    @if (isSavingReview) {
+                      <span class="spinner light" aria-hidden="true"></span>
+                    }
+                    {{ isEditingReview ? 'Guardar review' : 'Publicar review' }}
+                  </button>
+                </div>
+              </form>
+            } @else if (myReview()) {
+              <article class="my-review">
+                <div>
+                  <p class="eyebrow">Tu review</p>
+                  <div class="stars" [attr.aria-label]="'Rating ' + myReview()!.rating">
+                    @for (star of ratingStars(myReview()!.rating); track $index) {
+                      <span [class.filled]="star === 'filled'">&#9733;</span>
+                    }
+                  </div>
+                  <p>{{ myReview()!.comment }}</p>
+                </div>
+                <div class="review-actions">
+                  <button class="secondary-button" type="button" (click)="startEditReview(myReview()!)">Editar</button>
+                  <button class="danger-button" type="button" [disabled]="isSavingReview" (click)="deleteMyReview()">
+                    Eliminar
+                  </button>
+                </div>
+              </article>
+            }
+          }
+
+          @if (!isLoadingReviews && reviews?.results?.length) {
+            <div class="review-list">
+              @for (review of reviews!.results; track trackReview($index, review)) {
+                <article class="review-item">
+                  <div class="review-head">
+                    <div class="review-user">
+                      <span class="review-avatar">{{ (review.user_name || 'U').charAt(0).toUpperCase() }}</span>
+                      <strong>{{ review.user_name || 'Usuario' }}</strong>
+                    </div>
+                    <span>{{ formatDate(review.created_at) }}</span>
+                  </div>
+                  <div class="stars" [attr.aria-label]="'Rating ' + review.rating">
+                    @for (star of ratingStars(review.rating); track $index) {
+                      <span [class.filled]="star === 'filled'">&#9733;</span>
+                    }
+                  </div>
+                  <p>{{ review.comment }}</p>
+                </article>
+              }
+            </div>
+          } @else if (!isLoadingReviews) {
+            <div class="inline-state">Esta tienda aun no tiene reviews.</div>
+          }
+        </article>
+      </section>
+    }
+  </section>
+</main>

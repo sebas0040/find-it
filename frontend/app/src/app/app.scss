@@ -1,0 +1,200 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  --brand: #116d5c;
+  --brand-dark: #0b4f43;
+  --ink: #17211f;
+  --muted: #66736f;
+  --line: #d8e1de;
+  --surface: #ffffff;
+}
+
+.app-header {
+  height: 58px;
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 18px;
+  border-bottom: 1px solid var(--line);
+  padding: 0 18px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+}
+
+.brand,
+.desktop-nav a,
+.bottom-nav a,
+.dropdown a,
+.dropdown button {
+  color: var(--ink);
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--brand);
+  font-size: 1.05rem;
+}
+
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 8px;
+  color: #ffffff;
+  background: var(--brand);
+}
+
+.desktop-nav {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.desktop-nav a {
+  border-radius: 8px;
+  padding: 9px 11px;
+}
+
+.desktop-nav a.active,
+.desktop-nav a:hover,
+.bottom-nav a.active {
+  color: var(--brand-dark);
+  background: rgba(17, 109, 92, 0.1);
+}
+
+.user-menu {
+  position: relative;
+}
+
+.avatar-button {
+  width: 40px;
+  height: 40px;
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: #ffffff;
+  background: var(--brand);
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.avatar-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dropdown {
+  width: 220px;
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  background: var(--surface);
+  box-shadow: 0 16px 35px rgba(23, 33, 31, 0.14);
+}
+
+.dropdown-user {
+  display: grid;
+  gap: 3px;
+  border-bottom: 1px solid var(--line);
+  padding: 6px 8px 10px;
+}
+
+.dropdown-user span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+}
+
+.dropdown a,
+.dropdown button {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 8px;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dropdown a:hover,
+.dropdown button:hover {
+  background: rgba(17, 109, 92, 0.1);
+}
+
+.app-content.with-layout {
+  padding-top: 58px;
+}
+
+.bottom-nav {
+  min-height: 64px;
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 30;
+  display: none;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.bottom-nav a {
+  min-width: 0;
+  display: grid;
+  place-items: center;
+  gap: 3px;
+  padding: 7px 4px;
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.bottom-nav span {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: currentColor;
+  background: rgba(102, 115, 111, 0.11);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 720px) {
+  .app-header {
+    grid-template-columns: 1fr auto;
+  }
+
+  .desktop-nav {
+    display: none;
+  }
+
+  .app-content.with-layout {
+    padding-bottom: 72px;
+  }
+
+  .bottom-nav {
+    display: grid;
+  }
+}

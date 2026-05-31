@@ -1,0 +1,92 @@
+<main class="store-page">
+  <section class="store-shell">
+    @if (isCheckingStore) {
+      <section class="state-card">
+        <span class="spinner" aria-hidden="true"></span>
+        Verificando tu tienda
+      </section>
+    } @else if (formReady) {
+      <header class="page-header">
+        <p class="eyebrow">Find-It tienda</p>
+        <h1>Configura tu perfil de tienda</h1>
+      </header>
+
+      <form class="setup-grid" [formGroup]="storeForm" (ngSubmit)="submit()">
+        <section class="form-panel">
+          <label class="field">
+            <span>Nombre</span>
+            <input
+              type="text"
+              formControlName="name"
+              [class.invalid]="hasFieldError('name')"
+              autocomplete="organization"
+            />
+            @if (hasFieldError('name')) {
+              <small class="field-error">{{ fieldMessage('name') }}</small>
+            }
+          </label>
+
+          <label class="field">
+            <span>Descripcion</span>
+            <textarea rows="5" formControlName="description"></textarea>
+            @if (serverErrors.description) {
+              <small class="field-error">{{ serverErrors.description }}</small>
+            }
+          </label>
+
+          <label class="field">
+            <span>Direccion</span>
+            <input
+              type="text"
+              formControlName="address"
+              [class.invalid]="hasFieldError('address')"
+              autocomplete="street-address"
+            />
+            @if (hasFieldError('address')) {
+              <small class="field-error">{{ fieldMessage('address') }}</small>
+            }
+          </label>
+
+          <div class="coordinate-row">
+            <label class="field">
+              <span>Latitud</span>
+              <input type="number" formControlName="latitude" readonly [class.invalid]="hasFieldError('latitude')" />
+            </label>
+            <label class="field">
+              <span>Longitud</span>
+              <input type="number" formControlName="longitude" readonly [class.invalid]="hasFieldError('longitude')" />
+            </label>
+          </div>
+          @if (hasFieldError('latitude') || hasFieldError('longitude')) {
+            <small class="field-error">{{ fieldMessage('latitude') }}</small>
+          }
+
+          @if (formError) {
+            <p class="form-error" role="alert">{{ formError }}</p>
+          }
+
+          <button class="primary-button" type="submit" [disabled]="isSaving">
+            @if (isSaving) {
+              <span class="spinner light" aria-hidden="true"></span>
+            }
+            Guardar tienda
+          </button>
+        </section>
+
+        <section class="map-panel">
+          <div id="store-setup-map" class="map-canvas"></div>
+          <div class="map-actions">
+            <button class="secondary-button" type="button" (click)="useCurrentLocation()">
+              Usar mi ubicacion actual
+            </button>
+            @if (locationError) {
+              <p class="field-error" role="alert">{{ locationError }}</p>
+            }
+          </div>
+        </section>
+      </form>
+    } @else {
+      <section class="state-card error" role="alert">{{ formError }}</section>
+    }
+  </section>
+</main>

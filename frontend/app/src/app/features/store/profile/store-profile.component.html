@@ -1,0 +1,128 @@
+<main class="profile-page">
+  <section class="profile-shell">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Find-It tienda</p>
+        <h1>Perfil de tienda</h1>
+      </div>
+      <a class="secondary-link" routerLink="/dashboard">Dashboard</a>
+    </header>
+
+    @if (isLoading) {
+      <section class="state-card">
+        <span class="spinner" aria-hidden="true"></span>
+        Cargando perfil
+      </section>
+    } @else if (formError && !editMode) {
+      <section class="state-card error" role="alert">{{ formError }}</section>
+    } @else if (store && !editMode) {
+      <section class="profile-card">
+        <div class="profile-main">
+          <div class="title-row">
+            <div>
+              <p class="eyebrow">Tienda activa</p>
+              <h2>{{ store.name }}</h2>
+            </div>
+            <span class="verified-badge" [class.pending]="!store.verified">
+              {{ store.verified ? 'Verificada' : 'No verificada' }}
+            </span>
+          </div>
+
+          <p class="description">{{ store.description || 'Sin descripcion disponible.' }}</p>
+
+          @if (!store.verified) {
+            <p class="pending-message">Tu tienda esta pendiente de verificacion por un administrador</p>
+          }
+        </div>
+
+        <dl class="profile-details">
+          <div>
+            <dt>Direccion</dt>
+            <dd>{{ store.address }}</dd>
+          </div>
+          <div>
+            <dt>Rating</dt>
+            <dd class="rating-row">
+              <span class="stars" aria-hidden="true">
+                @for (star of ratingStars(store.rating); track $index) {
+                  <span [class.filled]="star === 'filled'">&#9733;</span>
+                }
+              </span>
+              <strong>{{ store.rating || 0 }}</strong>
+            </dd>
+          </div>
+        </dl>
+
+        <button class="primary-button" type="button" (click)="openEdit()">Editar perfil</button>
+      </section>
+    } @else if (store && editMode) {
+      <form class="edit-grid" [formGroup]="storeForm" (ngSubmit)="submit()">
+        <section class="form-panel">
+          <label class="field">
+            <span>Nombre</span>
+            <input type="text" formControlName="name" [class.invalid]="hasFieldError('name')" />
+            @if (hasFieldError('name')) {
+              <small class="field-error">{{ fieldMessage('name') }}</small>
+            }
+          </label>
+
+          <label class="field">
+            <span>Descripcion</span>
+            <textarea rows="5" formControlName="description"></textarea>
+            @if (serverErrors.description) {
+              <small class="field-error">{{ serverErrors.description }}</small>
+            }
+          </label>
+
+          <label class="field">
+            <span>Direccion</span>
+            <input type="text" formControlName="address" [class.invalid]="hasFieldError('address')" />
+            @if (hasFieldError('address')) {
+              <small class="field-error">{{ fieldMessage('address') }}</small>
+            }
+          </label>
+
+          <div class="coordinate-row">
+            <label class="field">
+              <span>Latitud</span>
+              <input type="number" formControlName="latitude" readonly [class.invalid]="hasFieldError('latitude')" />
+            </label>
+            <label class="field">
+              <span>Longitud</span>
+              <input type="number" formControlName="longitude" readonly [class.invalid]="hasFieldError('longitude')" />
+            </label>
+          </div>
+          @if (hasFieldError('latitude') || hasFieldError('longitude')) {
+            <small class="field-error">{{ fieldMessage('latitude') }}</small>
+          }
+
+          @if (formError) {
+            <p class="form-error" role="alert">{{ formError }}</p>
+          }
+
+          <div class="button-row">
+            <button class="primary-button" type="submit" [disabled]="isSaving">
+              @if (isSaving) {
+                <span class="spinner light" aria-hidden="true"></span>
+              }
+              Guardar cambios
+            </button>
+            <button class="secondary-button" type="button" (click)="cancelEdit()">Cancelar</button>
+          </div>
+        </section>
+
+        <section class="map-panel">
+          <div id="store-profile-map" class="map-canvas"></div>
+          <div class="map-actions">
+            <button class="secondary-button" type="button" (click)="useCurrentLocation()">
+              Usar mi ubicacion actual
+            </button>
+            @if (locationError) {
+              <p class="field-error" role="alert">{{ locationError }}</p>
+            }
+          </div>
+        </section>
+      </form>
+    }
+  </section>
+</main>

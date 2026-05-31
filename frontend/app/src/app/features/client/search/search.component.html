@@ -1,0 +1,239 @@
+<main class="search-page">
+  <section class="search-shell" aria-labelledby="search-title">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Find-It</p>
+        <h1 id="search-title">Busca productos cerca de ti</h1>
+      </div>
+
+      <div class="location-pill" [class.loading]="locationStatus === 'loading'">
+        @if (locationStatus === 'loading') {
+          <span class="spinner" aria-hidden="true"></span>
+          Obteniendo ubicacion
+        } @else if (locationStatus === 'granted') {
+          Ubicacion activa
+        } @else {
+          Ubicacion pendiente
+        }
+      </div>
+    </header>
+
+    @if (locationStatus === 'denied' || locationStatus === 'unsupported') {
+      <section class="location-panel" aria-label="Ubicacion requerida" [formGroup]="searchForm">
+        <div>
+          <h2>Necesitamos tu ubicacion</h2>
+          <p>
+            Find-It usa tu posicion para ordenar productos por distancia y buscar tiendas
+            dentro del radio elegido.
+          </p>
+        </div>
+        <label class="manual-location">
+          Ciudad o direccion
+          <input
+            type="text"
+            formControlName="manualLocation"
+            placeholder="Ej. Bogota, Chapinero"
+          />
+        </label>
+        @if (locationStatus === 'denied') {
+          <button class="secondary-button" type="button" (click)="requestLocation()">
+            Intentar de nuevo
+          </button>
+        }
+      </section>
+    }
+
+    <form class="search-toolbar" [formGroup]="searchForm" (ngSubmit)="search()" novalidate>
+      <label class="field query-field">
+        Producto o marca
+        <input type="search" formControlName="q" placeholder="Leche, arroz, Nike..." />
+      </label>
+
+      <label class="field">
+        Categoria
+        <select formControlName="category">
+          <option value="">Todas</option>
+          @for (category of categories; track category.id) {
+            <option [value]="category.id">{{ category.name }}</option>
+          }
+        </select>
+      </label>
+
+      <fieldset class="radius-group">
+        <legend>Radio</legend>
+        <div class="radius-options">
+          @for (radius of radiusOptions; track radius) {
+            <label>
+              <input type="radio" formControlName="radius" [value]="radius" />
+              <span>{{ radius }} km</span>
+            </label>
+          }
+        </div>
+      </fieldset>
+
+      <button class="primary-button" type="submit" [disabled]="isLoadingResults || locationStatus !== 'granted'">
+        @if (isLoadingResults) {
+          <span class="spinner" aria-hidden="true"></span>
+          Buscando
+        } @else {
+          Buscar
+        }
+      </button>
+    </form>
+
+    @if (searchError) {
+      <p class="form-error" role="alert">{{ searchError }}</p>
+    }
+    @if (favoriteError) {
+      <p class="form-error" role="alert">{{ favoriteError }}</p>
+    }
+
+    <section class="results-head" aria-live="polite">
+      <h2>Resultados</h2>
+      @if (response) {
+        <span>{{ response.count }} encontrados</span>
+      }
+    </section>
+
+    @if (isLoadingResults) {
+      <section class="results-grid" aria-label="Cargando resultados">
+        @for (item of skeletonItems; track $index) {
+          <article class="product-card skeleton-card">
+            <div class="skeleton image-skeleton"></div>
+            <div class="skeleton line wide"></div>
+            <div class="skeleton line"></div>
+            <div class="skeleton line short"></div>
+          </article>
+        }
+      </section>
+    } @else if (response?.results?.length) {
+      <section class="results-grid">
+        @for (result of response!.results; track trackResult($index, result)) {
+          <article
+            class="product-card"
+            tabindex="0"
+            role="button"
+            (click)="openDetail(result)"
+            (keydown.enter)="openDetail(result)"
+          >
+            <div class="product-media">
+              @if (result.product.image) {
+                <img [src]="result.product.image" [alt]="result.product.name" />
+              } @else {
+                <span aria-hidden="true">FI</span>
+              }
+            </div>
+
+            <div class="card-body">
+              <div class="product-title-row">
+                <div>
+                  <h3>{{ result.product.name }}</h3>
+                  <p>{{ result.product.brand || 'Marca no especificada' }}</p>
+                </div>
+                <div class="card-badges">
+                  <button
+                    class="favorite-button"
+                    type="button"
+                    [class.active]="isFavorite(result.product.id)"
+                    [disabled]="isFavoriteLoading(result.product.id)"
+                    [attr.aria-label]="isFavorite(result.product.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'"
+                    (click)="toggleFavorite(result, $event)"
+                  >
+                    {{ isFavorite(result.product.id) ? '♥' : '♡' }}
+                  </button>
+                  <span class="stock-badge" [class.out]="!result.inventory.available || result.inventory.stock <= 0">
+                    {{ result.inventory.available && result.inventory.stock > 0 ? 'Disponible' : 'Sin stock' }}
+                  </span>
+                </div>
+              </div>
+
+              <p class="price">{{ formatPrice(result.inventory.price) }}</p>
+
+              <div class="store-row">
+                <span>{{ result.store.name }}</span>
+                <strong>{{ distanceLabel(result) }}</strong>
+              </div>
+
+              <div class="card-actions">
+                <span>{{ result.inventory.stock }} en stock</span>
+                <button type="button" (click)="openStoreMap(result, $event)">Ver mapa</button>
+              </div>
+            </div>
+          </article>
+        }
+      </section>
+
+      <nav class="pagination" aria-label="Paginacion de resultados">
+        <button type="button" [disabled]="!response?.previous || isLoadingResults" (click)="goToPreviousPage()">
+          Anterior
+        </button>
+        <span>{{ response?.count }} resultados</span>
+        <button type="button" [disabled]="!response?.next || isLoadingResults" (click)="goToNextPage()">
+          Siguiente
+        </button>
+      </nav>
+    } @else {
+      <section class="empty-state">
+        <h2>No hay productos para mostrar</h2>
+        <p>Ajusta el nombre, la categoria o amplia el radio de busqueda.</p>
+      </section>
+    }
+  </section>
+
+  @if (selectedResult) {
+    <div class="detail-backdrop" (click)="closeDetail()"></div>
+    <aside class="detail-panel" aria-label="Detalle del producto">
+      <button class="close-button" type="button" aria-label="Cerrar detalle" (click)="closeDetail()">x</button>
+
+      @if (isLoadingDetail) {
+        <div class="detail-loading">
+          <span class="spinner dark" aria-hidden="true"></span>
+          Cargando detalle
+        </div>
+      } @else if (detailError) {
+        <p class="form-error" role="alert">{{ detailError }}</p>
+      } @else {
+        @let detail = detailResult || selectedResult;
+        <div class="detail-media">
+          @if (detail.product.image) {
+            <img [src]="detail.product.image" [alt]="detail.product.name" />
+          } @else {
+            <span aria-hidden="true">FI</span>
+          }
+        </div>
+
+        <p class="eyebrow">{{ detail.product.category.name }}</p>
+        <h2>{{ detail.product.name }}</h2>
+        <p class="detail-brand">{{ detail.product.brand || 'Marca no especificada' }}</p>
+        <p class="detail-description">{{ detail.product.description || 'Sin descripcion disponible.' }}</p>
+
+        <dl class="detail-list">
+          <div>
+            <dt>Precio</dt>
+            <dd class="price">{{ formatPrice(detail.inventory.price) }}</dd>
+          </div>
+          <div>
+            <dt>Stock</dt>
+            <dd>{{ detail.inventory.stock }} unidades</dd>
+          </div>
+          <div>
+            <dt>Tienda</dt>
+            <dd>{{ detail.store.name }}</dd>
+          </div>
+          <div>
+            <dt>Direccion</dt>
+            <dd>{{ detail.store.address }}</dd>
+          </div>
+          <div>
+            <dt>Distancia</dt>
+            <dd>{{ distanceLabel(detail) }}</dd>
+          </div>
+        </dl>
+
+        <button class="primary-button full" type="button" (click)="openStoreMap(detail)">
+          Ver en mapa
+        </button>
+      }
+    </aside>
+  }
+</main>

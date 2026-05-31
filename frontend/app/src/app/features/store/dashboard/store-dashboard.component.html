@@ -1,0 +1,84 @@
+<main class="dashboard-page">
+  <section class="dashboard-shell">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Find-It tienda</p>
+        <h1>Dashboard</h1>
+      </div>
+      <a class="secondary-link" routerLink="/dashboard/profile">Perfil de tienda</a>
+    </header>
+
+    @if (isLoadingStore) {
+      <section class="state-card">
+        <span class="spinner" aria-hidden="true"></span>
+        Cargando tu tienda
+      </section>
+    } @else if (errorMessage) {
+      <section class="state-card error" role="alert">{{ errorMessage }}</section>
+    } @else if (store) {
+      <section class="store-summary">
+        <div>
+          <p class="eyebrow">Tienda activa</p>
+          <h2>{{ store.name }}</h2>
+          <p>{{ store.description || 'Sin descripcion disponible.' }}</p>
+        </div>
+
+        <dl>
+          <div>
+            <dt>Direccion</dt>
+            <dd>{{ store.address }}</dd>
+          </div>
+          <div>
+            <dt>Rating</dt>
+            <dd>{{ store.rating || 0 }}</dd>
+          </div>
+          <div>
+            <dt>Estado</dt>
+            <dd>
+              <span class="verified-badge" [class.pending]="!store.verified">
+                {{ store.verified ? 'Verificada' : 'Pendiente' }}
+              </span>
+            </dd>
+          </div>
+        </dl>
+      </section>
+    }
+
+    <section class="inventory-panel">
+      <header>
+        <div>
+          <p class="eyebrow">Inventario</p>
+          <h2>Mis productos</h2>
+        </div>
+        <a class="secondary-link" routerLink="/dashboard/inventory">Gestionar inventario</a>
+      </header>
+
+      @if (isLoadingInventory) {
+        <div class="inline-state">
+          <span class="spinner" aria-hidden="true"></span>
+          Cargando inventario
+        </div>
+      } @else if (inventory.length) {
+        <div class="inventory-list">
+          @for (item of inventory; track trackInventory($index, item)) {
+            <article class="inventory-item">
+              <div>
+                <h3>{{ item.product.name }}</h3>
+                <p>{{ item.product.brand || 'Marca no especificada' }}</p>
+              </div>
+              <div class="inventory-meta">
+                <strong>{{ formatPrice(item.price) }}</strong>
+                <span>{{ item.stock }} en stock</span>
+                <span class="stock-badge" [class.out]="!item.available || item.stock <= 0">
+                  {{ item.available && item.stock > 0 ? 'Disponible' : 'Sin stock' }}
+                </span>
+              </div>
+            </article>
+          }
+        </div>
+      } @else {
+        <div class="inline-state">Todavia no hay productos en tu inventario.</div>
+      }
+    </section>
+  </section>
+</main>

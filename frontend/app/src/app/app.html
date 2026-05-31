@@ -1,0 +1,54 @@
+@if (showLayout()) {
+  <header class="app-header">
+    <a class="brand" routerLink="/search" aria-label="Find-It inicio">
+      <span class="brand-mark" aria-hidden="true">F</span>
+      Find-It
+    </a>
+
+    <nav class="desktop-nav" aria-label="Navegacion principal">
+      @for (item of navItems(); track item.path) {
+        <a [routerLink]="item.path" routerLinkActive="active">{{ item.label }}</a>
+      }
+    </nav>
+
+    <div class="user-menu">
+      <button class="avatar-button" type="button" (click)="toggleUserMenu()" aria-label="Abrir menu de usuario">
+        @if (user()?.avatar) {
+          <img [src]="user()!.avatar" alt="" />
+        } @else {
+          <span>{{ initials() }}</span>
+        }
+      </button>
+
+      @if (isUserMenuOpen) {
+        <div class="dropdown" role="menu">
+          <div class="dropdown-user">
+            <strong>{{ user()?.name || 'Usuario' }}</strong>
+            <span>{{ user()?.email }}</span>
+          </div>
+          <a routerLink="/profile" role="menuitem">Mi perfil</a>
+          <button type="button" role="menuitem" (click)="logout()">Cerrar sesion</button>
+        </div>
+      }
+    </div>
+  </header>
+}
+
+<main class="app-content" [class.with-layout]="showLayout()">
+  <router-outlet />
+</main>
+
+@if (showLayout()) {
+  <nav class="bottom-nav" aria-label="Navegacion movil">
+    @for (item of navItems(); track item.path) {
+      <a [routerLink]="item.path" routerLinkActive="active">
+        <span aria-hidden="true">{{ item.icon }}</span>
+        {{ item.label }}
+      </a>
+    }
+    <a routerLink="/profile" routerLinkActive="active">
+      <span aria-hidden="true">P</span>
+      Perfil
+    </a>
+  </nav>
+}
