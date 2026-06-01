@@ -16,6 +16,10 @@
     } @else if (formError && !editMode) {
       <section class="state-card error" role="alert">{{ formError }}</section>
     } @else if (store && !editMode) {
+      @if (successMessage) {
+        <p class="success-message" role="status">{{ successMessage }}</p>
+      }
+
       <section class="profile-card">
         <div class="profile-main">
           <div class="title-row">

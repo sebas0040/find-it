@@ -87,6 +87,9 @@
     @if (favoriteError) {
       <p class="form-error" role="alert">{{ favoriteError }}</p>
     }
+    @if (favoriteSuccess) {
+      <p class="success-message" role="status">{{ favoriteSuccess }}</p>
+    }
 
     <section class="results-head" aria-live="polite">
       <h2>Resultados</h2>

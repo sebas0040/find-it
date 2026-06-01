@@ -74,6 +74,7 @@ export class StoreInventoryComponent implements OnInit {
   isLoadingCategories = false;
   isSaving = false;
   isDeletingId: string | number | null = null;
+  successMessage = '';
   errorMessage = '';
   modalError = '';
 
@@ -117,6 +118,7 @@ export class StoreInventoryComponent implements OnInit {
     this.modalMode = 'add';
     this.addStep = 1;
     this.modalError = '';
+    this.successMessage = '';
     this.selectedProduct = null;
     this.productResults = [];
     this.productSearchForm.reset({ query: '' });
@@ -126,6 +128,7 @@ export class StoreInventoryComponent implements OnInit {
   openCreateProduct(): void {
     this.modalMode = 'createProduct';
     this.modalError = '';
+    this.successMessage = '';
     this.productForm.reset({
       name: this.productSearchForm.controls.query.value || '',
       brand: '',
@@ -139,6 +142,7 @@ export class StoreInventoryComponent implements OnInit {
   openEditModal(item: Inventory): void {
     this.modalMode = 'edit';
     this.modalError = '';
+    this.successMessage = '';
     this.editingItem = item;
     this.editForm.reset({
       price: Number(item.price),
@@ -169,6 +173,7 @@ export class StoreInventoryComponent implements OnInit {
 
   createProduct(): void {
     this.modalError = '';
+    this.successMessage = '';
 
     if (this.productForm.invalid) {
       this.productForm.markAllAsTouched();
@@ -197,6 +202,7 @@ export class StoreInventoryComponent implements OnInit {
           this.modalMode = 'add';
           this.addStep = 2;
           this.inventoryForm.reset({ price: null, stock: 0, available: true });
+          this.successMessage = 'Producto creado correctamente.';
         },
         error: (error: unknown) => {
           this.modalError = this.errorText(error, 'No pudimos crear el producto.');
@@ -206,6 +212,7 @@ export class StoreInventoryComponent implements OnInit {
 
   createInventoryItem(): void {
     this.modalError = '';
+    this.successMessage = '';
 
     if (!this.store || !this.selectedProduct) {
       this.modalError = 'Selecciona un producto y verifica tu tienda.';
@@ -237,6 +244,7 @@ export class StoreInventoryComponent implements OnInit {
         next: (item) => {
           this.inventory = [item, ...this.inventory];
           this.closeModal();
+          this.successMessage = 'Producto creado correctamente.';
         },
         error: (error: unknown) => {
           this.modalError = this.errorText(error, 'No pudimos agregar el producto al inventario.');
@@ -246,6 +254,7 @@ export class StoreInventoryComponent implements OnInit {
 
   saveEdit(): void {
     this.modalError = '';
+    this.successMessage = '';
 
     if (!this.editingItem) {
       return;
@@ -289,6 +298,7 @@ export class StoreInventoryComponent implements OnInit {
         next: (item) => {
           this.replaceInventoryItem(item);
           this.closeModal();
+          this.successMessage = 'Producto actualizado correctamente.';
         },
         error: (error: unknown) => {
           this.modalError = this.errorText(error, 'No pudimos guardar los cambios.');
@@ -311,12 +321,14 @@ export class StoreInventoryComponent implements OnInit {
   }
 
   deleteItem(item: Inventory): void {
-    const confirmed = window.confirm(`Eliminar "${item.product.name}" del inventario?`);
+    const confirmed = window.confirm(`¿Deseas eliminar este producto? ${item.product.name}`);
 
     if (!confirmed) {
       return;
     }
 
+    this.successMessage = '';
+    this.errorMessage = '';
     this.isDeletingId = item.id;
     this.inventoryService
       .deleteInventoryItem(item.id)
@@ -330,6 +342,7 @@ export class StoreInventoryComponent implements OnInit {
         next: () => {
           this.inventory = this.inventory.filter((current) => current.id !== item.id);
           this.clampPage();
+          this.successMessage = 'Producto eliminado correctamente.';
         },
         error: (error: unknown) => {
           this.errorMessage = this.errorText(error, 'No pudimos eliminar el item.');

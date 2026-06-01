@@ -313,6 +313,11 @@ button:disabled {
   border-radius: 8px;
 }
 
+.alert.success {
+  color: var(--success);
+  background: rgba(15, 123, 82, 0.1);
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;

@@ -58,6 +58,7 @@ export class SearchComponent implements OnInit {
   searchError = '';
   detailError = '';
   favoriteError = '';
+  favoriteSuccess = '';
   togglingFavoriteProductId: string | number | null = null;
 
   ngOnInit(): void {
@@ -187,6 +188,7 @@ export class SearchComponent implements OnInit {
   toggleFavorite(result: SearchResult, event: Event): void {
     event.stopPropagation();
     this.favoriteError = '';
+    this.favoriteSuccess = '';
 
     if (this.authService.user()?.role !== 'CLIENT') {
       this.favoriteError = 'Solo clientes pueden guardar favoritos.';
@@ -195,6 +197,11 @@ export class SearchComponent implements OnInit {
 
     const productId = result.product.id;
     const favorite = this.favoriteForProduct(productId);
+
+    if (favorite && !window.confirm('¿Deseas eliminar este favorito?')) {
+      return;
+    }
+
     this.togglingFavoriteProductId = productId;
 
     if (favorite) {
@@ -209,6 +216,7 @@ export class SearchComponent implements OnInit {
         .subscribe({
           next: () => {
             this.favorites = this.favorites.filter((item) => item.id !== favorite.id);
+            this.favoriteSuccess = 'Favorito eliminado correctamente.';
           },
           error: () => {
             this.favoriteError = 'No pudimos actualizar favoritos.';

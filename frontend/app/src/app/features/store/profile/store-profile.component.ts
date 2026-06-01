@@ -42,6 +42,7 @@ export class StoreProfileComponent implements OnInit, AfterViewInit, OnDestroy {
   isLoading = true;
   isSaving = false;
   editMode = false;
+  successMessage = '';
   formError = '';
   serverErrors: ServerErrors = {};
   locationError = '';
@@ -70,6 +71,7 @@ export class StoreProfileComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.serverErrors = {};
     this.formError = '';
+    this.successMessage = '';
     this.locationError = '';
     this.patchForm(this.store);
     this.editMode = true;
@@ -102,6 +104,7 @@ export class StoreProfileComponent implements OnInit, AfterViewInit, OnDestroy {
 
   submit(): void {
     this.formError = '';
+    this.successMessage = '';
     this.serverErrors = {};
 
     if (this.storeForm.invalid) {
@@ -132,6 +135,7 @@ export class StoreProfileComponent implements OnInit, AfterViewInit, OnDestroy {
           this.storeService.setActiveStore(store);
           this.editMode = false;
           this.destroyMap();
+          this.successMessage = 'Perfil actualizado correctamente.';
         },
         error: (error: unknown) => {
           this.applyServerErrors(error, 'No pudimos guardar los cambios. Revisa los datos e intentalo otra vez.');

@@ -195,17 +195,31 @@ input.invalid {
 }
 
 .field-error,
-.form-error {
+.form-error,
+.success-message {
   margin: 0;
-  color: var(--danger);
   font-size: 0.84rem;
   line-height: 1.35;
+}
+
+.field-error,
+.form-error {
+  color: var(--danger);
 }
 
 .form-error {
   padding: 12px;
   border-radius: 8px;
   background: #fff1f0;
+}
+
+.success-message {
+  margin-bottom: 14px;
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--success);
+  background: rgba(15, 123, 82, 0.1);
+  font-weight: 800;
 }
 
 .primary-button,

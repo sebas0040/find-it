@@ -11,6 +11,9 @@
     @if (errorMessage) {
       <p class="form-error" role="alert">{{ errorMessage }}</p>
     }
+    @if (successMessage) {
+      <p class="success-message" role="status">{{ successMessage }}</p>
+    }
 
     @if (isLoading) {
       <section class="state-card">

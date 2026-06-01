@@ -21,6 +21,7 @@ export class FavoritesComponent implements OnInit {
   favorites: Favorite[] = [];
   isLoading = true;
   deletingId: string | number | null = null;
+  successMessage = '';
   errorMessage = '';
 
   ngOnInit(): void {
@@ -28,7 +29,14 @@ export class FavoritesComponent implements OnInit {
   }
 
   removeFavorite(favorite: Favorite): void {
+    const confirmed = window.confirm('¿Deseas eliminar este favorito?');
+
+    if (!confirmed) {
+      return;
+    }
+
     this.deletingId = favorite.id;
+    this.successMessage = '';
     this.errorMessage = '';
 
     this.reviewService
@@ -42,6 +50,7 @@ export class FavoritesComponent implements OnInit {
       .subscribe({
         next: () => {
           this.favorites = this.favorites.filter((item) => item.id !== favorite.id);
+          this.successMessage = 'Favorito eliminado correctamente.';
         },
         error: () => {
           this.errorMessage = 'No pudimos eliminar este favorito.';

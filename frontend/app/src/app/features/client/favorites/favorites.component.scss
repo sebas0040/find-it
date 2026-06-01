@@ -159,13 +159,22 @@ h1 {
   color: var(--ink);
 }
 
-.form-error {
+.form-error,
+.success-message {
   margin: 0 0 14px;
   border-radius: 8px;
   padding: 12px;
+  font-weight: 800;
+}
+
+.form-error {
   color: var(--danger);
   background: #fff1f0;
-  font-weight: 800;
+}
+
+.success-message {
+  color: var(--brand);
+  background: rgba(17, 109, 92, 0.1);
 }
 
 .spinner {

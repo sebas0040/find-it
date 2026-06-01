@@ -231,13 +231,23 @@ select:focus {
   color: var(--brand);
 }
 
-.form-error {
+.form-error,
+.success-message {
   margin: 14px 0 0;
   border-radius: 8px;
   padding: 12px;
+  font-size: 0.9rem;
+}
+
+.form-error {
   background: #fff1f0;
   color: var(--danger);
-  font-size: 0.9rem;
+}
+
+.success-message {
+  color: var(--success);
+  background: rgba(15, 123, 82, 0.1);
+  font-weight: 800;
 }
 
 .results-head {

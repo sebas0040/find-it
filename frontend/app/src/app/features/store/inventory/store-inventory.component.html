@@ -14,6 +14,9 @@
     @if (errorMessage) {
       <section class="alert" role="alert">{{ errorMessage }}</section>
     }
+    @if (successMessage) {
+      <section class="alert success" role="status">{{ successMessage }}</section>
+    }
 
     <section class="toolbar" [formGroup]="searchForm">
       <label class="field search-field">
